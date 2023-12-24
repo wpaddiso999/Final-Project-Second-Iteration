@@ -30,3 +30,20 @@ def test_get_movie_description_endpoint(mock_get_movie_description):
         "movie_name": "your_movie_name",
         "description": "Movie Description"
     }
+    
+def test_translate_and_get_youtube_reviews():
+    # Replace 'your_movie_name' and 'your_target_language' with actual values
+    movie_name = "your_movie_name"
+    target_language = "your_target_language"
+
+    response = client.get(f"/translate_moviereviews_reviews/?movie_name={movie_name}&target_language={target_language}")
+
+    assert response.status_code == 200
+    assert "movie_name" in response.json()
+    assert "reviews" in response.json()
+
+    # Add more specific assertions based on the expected response structure
+    for review in response.json()["reviews"]:
+        assert "title" in review
+        assert "description" in review
+        assert "video_url" in review
