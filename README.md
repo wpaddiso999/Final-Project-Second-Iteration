@@ -5,7 +5,9 @@ In order to run this code correctly you will need to do the following Download t
 
 Open file in vs code editor
 
-Open terminal and type // python3 app.py
+Open terminal and type pip install googletrans==4.0.0-rc1
+
+In terminal type // python3 app.py
 
 This will prompt you to open application in browser
 
