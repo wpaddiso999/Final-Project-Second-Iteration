@@ -22,4 +22,11 @@ def test_get_youtube_reviews():
     assert response.status_code == 200
     # Add more assertions based on the expected response structure
 
-# Add more tests as needed
+def test_get_movie_description_endpoint(mock_get_movie_description):
+    response = client.get("/movie_description/?movie_name=your_movie_name")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "movie_name": "your_movie_name",
+        "description": "Movie Description"
+    }
