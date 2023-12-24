@@ -3,6 +3,8 @@ from googleapiclient.discovery import build
 from pprint import pprint
 import requests
 from google.cloud import translate
+from fastapi import FastAPI, HTTPException
+from googleapiclient.discovery import build
 
 app = FastAPI()
 TARGET_LANGUAGE = "zh"  # Chinese
@@ -87,3 +89,35 @@ def get_youtube_reviews(movie_name: str):
         })
 
     return {"movie_name": movie_name, "reviews": reviews}
+
+def get_movie_description(movie_name: str):
+    youtube = build("youtube", "v3", developerKey=API_KEY)
+
+    # Search for videos related to the movie
+    video_ids = youtube_search(movie_name)
+
+    if not video_ids:
+        raise HTTPException(status_code=404, detail=f"No videos found for the movie: {movie_name}")
+
+    # Take the first video's ID (you can modify this logic based on your requirements)
+    video_id = video_ids[0]
+
+    # Get video details including the description
+    video_response = youtube.videos().list(
+        part="snippet",
+        id=video_id
+    ).execute()
+
+    video_info = video_response.get("items", [])
+
+    if not video_info:
+        raise HTTPException(status_code=404, detail=f"No information found for the movie: {movie_name}")
+
+    # Extract the description from the video information
+    description = video_info[0]["snippet"]["description"]
+
+    return {"movie_name": movie_name, "description": description}
+
+@app.get("/movie_description/")
+def get_movie_description_endpoint(movie_name: str):
+    return get_movie_description(movie_name)
