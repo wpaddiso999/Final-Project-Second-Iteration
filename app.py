@@ -5,6 +5,10 @@ import requests
 from google.cloud import translate
 from fastapi import FastAPI, HTTPException
 from googleapiclient.discovery import build
+# Import necessary libraries
+from googletrans import Translator
+from googleapiclient.discovery import build
+from fastapi import HTTPException
 
 app = FastAPI()
 TARGET_LANGUAGE = "zh"  # Chinese
@@ -121,3 +125,46 @@ def get_movie_description(movie_name: str):
 @app.get("/movie_description/")
 def get_movie_description_endpoint(movie_name: str):
     return get_movie_description(movie_name)
+
+# Function to perform translation using googletrans
+def translate_text(text, target_language):
+    translator = Translator()
+    translation = translator.translate(text, dest=target_language)
+    return translation.text
+
+# Updated method to include target_language parameter
+@app.get("/moviereviews_reviews/")
+def get_youtube_reviews(movie_name: str, target_language: str):
+    # Translate the movie name to the target language
+    translated_movie_name = translate_text(movie_name, target_language)
+
+    # Search for videos related to the translated movie name
+    video_ids = youtube_search(translated_movie_name)
+
+    if not video_ids:
+        raise HTTPException(status_code=404, detail=f"No videos found for the movie: {translated_movie_name}")
+
+    youtube = build("youtube", "v3", developerKey=API_KEY)
+
+    reviews = []
+    for video_id in video_ids:
+        video_response = youtube.videos().list(
+            part="snippet",
+            id=video_id
+        ).execute()
+
+        video_info = video_response.get("items", [])
+        if not video_info:
+            continue
+
+        title = translate_text(video_info[0]["snippet"]["title"], target_language)
+        description = translate_text(video_info[0]["snippet"]["description"], target_language)
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+        reviews.append({
+            "title": title,
+            "description": description,
+            "video_url": video_url
+        })
+
+    return {"movie_name": translated_movie_name, "reviews": reviews}
