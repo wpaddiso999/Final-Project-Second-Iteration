@@ -132,9 +132,9 @@ def translate_text(text, target_language):
     translation = translator.translate(text, dest=target_language)
     return translation.text
 
-# Updated method to include target_language parameter
-@app.get("/moviereviews_reviews/")
-def get_youtube_reviews(movie_name: str, target_language: str):
+# Updated method to include target_language parameter and "translate" in the name
+@app.get("/translate_moviereviews_reviews/")
+def translate_and_get_youtube_reviews(movie_name: str, target_language: str):
     # Translate the movie name to the target language
     translated_movie_name = translate_text(movie_name, target_language)
 
@@ -168,3 +168,4 @@ def get_youtube_reviews(movie_name: str, target_language: str):
         })
 
     return {"movie_name": translated_movie_name, "reviews": reviews}
+
