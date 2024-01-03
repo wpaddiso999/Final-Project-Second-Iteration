@@ -94,17 +94,17 @@ def get_youtube_reviews(movie_name: str):
 
     return {"movie_name": movie_name, "reviews": reviews}
 
-def get_movie_description(movie_name: str):
+
+def extract_video_id(youtube_url: str) -> str:
+    # Extract video ID from the YouTube URL
+    video_id = youtube_url.split("v=")[1]
+    return video_id
+
+def get_movie_description(youtube_url: str):
     youtube = build("youtube", "v3", developerKey=API_KEY)
 
-    # Search for videos related to the movie
-    video_ids = youtube_search(movie_name)
-
-    if not video_ids:
-        raise HTTPException(status_code=404, detail=f"No videos found for the movie: {movie_name}")
-
-    # Take the first video's ID (you can modify this logic based on your requirements)
-    video_id = video_ids[0]
+    # Extract video ID from the YouTube URL
+    video_id = extract_video_id(youtube_url)
 
     # Get video details including the description
     video_response = youtube.videos().list(
@@ -115,16 +115,17 @@ def get_movie_description(movie_name: str):
     video_info = video_response.get("items", [])
 
     if not video_info:
-        raise HTTPException(status_code=404, detail=f"No information found for the movie: {movie_name}")
+        raise HTTPException(status_code=404, detail=f"No information found for the video with URL: {youtube_url}")
 
     # Extract the description from the video information
     description = video_info[0]["snippet"]["description"]
 
-    return {"movie_name": movie_name, "description": description}
+    return {"video_url": youtube_url, "description": description}
 
-@app.get("/movie_description/")
-def get_movie_description_endpoint(movie_name: str):
-    return get_movie_description(movie_name)
+@app.get("/video_description/")
+def get_video_description_endpoint(youtube_url: str):
+    return get_movie_description(youtube_url)
+
 
 # Function to perform translation using googletrans
 def translate_text(text, target_language):
