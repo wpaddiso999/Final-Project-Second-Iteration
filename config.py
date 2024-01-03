@@ -1,1 +1,3 @@
-Issue 2: [feature] Find movie commentary/reviews through YouTube API 
+
+
+API_KEY = "AIzaSyB9lomWP02z3mjqFrnwXz1F3hrj7J8SJGE"
