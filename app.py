@@ -99,13 +99,9 @@ def extract_video_id(youtube_url: str) -> str:
     video_id = youtube_url.split("v=")[1]
     return video_id
 
-def get_movie_description(youtube_url: str):
+def get_movie_description(video_id: str):
     youtube = build("youtube", "v3", developerKey=API_KEY)
 
-    
-    video_id = extract_video_id(youtube_url)
-
-   
     video_response = youtube.videos().list(
         part="snippet",
         id=video_id
@@ -114,17 +110,15 @@ def get_movie_description(youtube_url: str):
     video_info = video_response.get("items", [])
 
     if not video_info:
-        raise HTTPException(status_code=404, detail=f"No information found for the video with URL: {youtube_url}")
+        raise HTTPException(status_code=404, detail=f"No information found for the video with ID: {video_id}")
 
-   
     description = video_info[0]["snippet"]["description"]
 
-    return {"video_url": youtube_url, "description": description}
+    return {"video_id": video_id, "description": description}
 
 @app.get("/video_description/")
-def get_video_description_endpoint(youtube_url: str):
-    return get_movie_description(youtube_url)
-
+def get_video_description_endpoint(video_id: str):
+    return get_movie_description(video_id)
 
 
 def translate_text(text, target_language):
@@ -132,32 +126,23 @@ def translate_text(text, target_language):
     translation = translator.translate(text, dest=target_language)
     return translation.text
 
-
 def youtube_search(movie_name):
-   
-    API_KEY = 'AIzaSyB9lomWP02z3mjqFrnwXz1F3hrj7J8SJGE'
     youtube = build("youtube", "v3", developerKey=API_KEY)
 
-    # Perform the search
     search_response = youtube.search().list(
         q=movie_name,
         part="id",
         type="video",
-        maxResults=5  # You can adjust the number of results as needed
+        maxResults=10
     ).execute()
 
-    
     video_ids = [item["id"]["videoId"] for item in search_response.get("items", [])]
-
     return video_ids
-
 
 @app.get("/translate_moviereviews_reviews/")
 def translate_and_get_youtube_reviews(movie_name: str, target_language: str):
-   
     translated_movie_name = translate_text(movie_name, target_language)
 
-   
     video_ids = youtube_search(translated_movie_name)
 
     if not video_ids:
