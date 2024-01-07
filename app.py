@@ -121,32 +121,30 @@ def get_video_description_endpoint(video_id: str):
     return get_movie_description(video_id)
 
 
-def translate_text(text, target_language):
-    translator = Translator()
-    translation = translator.translate(text, dest=target_language)
-    return translation.text
 
-def youtube_search(movie_name):
+
+def youtube_search(query, max_results=10):
     youtube = build("youtube", "v3", developerKey=API_KEY)
-
     search_response = youtube.search().list(
-        q=movie_name,
-        part="id",
+        q=query,
         type="video",
-        maxResults=10
+        part="id",
+        maxResults=max_results
     ).execute()
 
-    video_ids = [item["id"]["videoId"] for item in search_response.get("items", [])]
+    video_ids = [item['id']['videoId'] for item in search_response.get('items', [])]
     return video_ids
 
-@app.get("/translate_moviereviews_reviews/")
-def translate_and_get_youtube_reviews(movie_name: str, target_language: str):
-    translated_movie_name = translate_text(movie_name, target_language)
+@app.get("/translated_movie_reviews/")
+def translated_movie_reviews(movie_name: str, target_language: str):
+    # Translate the movie name to the target language
+    translator = Translator()
+    translated_movie_name = translator.translate(movie_name, dest=target_language).text
 
     video_ids = youtube_search(translated_movie_name)
-
+    
     if not video_ids:
-        raise HTTPException(status_code=404, detail=f"No videos found for the movie: {translated_movie_name}")
+        raise HTTPException(status_code=404, detail=f"No videos found for the movie: {movie_name}")
 
     youtube = build("youtube", "v3", developerKey=API_KEY)
 
@@ -161,8 +159,8 @@ def translate_and_get_youtube_reviews(movie_name: str, target_language: str):
         if not video_info:
             continue
 
-        title = translate_text(video_info[0]["snippet"]["title"], target_language)
-        description = translate_text(video_info[0]["snippet"]["description"], target_language)
+        title = video_info[0]["snippet"]["title"]
+        description = video_info[0]["snippet"]["description"]
         video_url = f"https://www.youtube.com/watch?v={video_id}"
 
         reviews.append({
