@@ -4,11 +4,7 @@ from pprint import pprint
 import requests
 from google.cloud import translate
 from fastapi import FastAPI, HTTPException
-from googleapiclient.discovery import build
-# Import necessary libraries
-from googletrans import Translator
-from googleapiclient.discovery import build
-from fastapi import HTTPException
+
 
 app = FastAPI()
 
@@ -137,9 +133,9 @@ def youtube_search(query, max_results=10):
 
 @app.get("/translated_movie_reviews/")
 def translated_movie_reviews(movie_name: str, target_language: str):
-    # Translate the movie name to the target language
-    translator = Translator()
-    translated_movie_name = translator.translate(movie_name, dest=target_language).text
+    translation_service = build("translate","v2",developerKey=API_KEY)
+    translated = translation_service.translations().list(source="en",target=target_language,q=[movie_name]).execute()
+    translated_movie_name = translated['translations'][0]['translatedText']
 
     video_ids = youtube_search(translated_movie_name)
     
